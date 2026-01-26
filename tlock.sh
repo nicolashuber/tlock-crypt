@@ -27,8 +27,8 @@ show_help() {
     echo "  $(basename "$0") -t 48h -n testnet report.txt"
     echo
     echo "  # Decrypt"
-    echo "  $(basename "$0") -d locked-file.dee"
-    echo "  $(basename "$0") -d secret.dee"
+    echo "  $(basename "$0") -d locked-file.tlock"
+    echo "  $(basename "$0") -d secret.tlock"
     exit 1
 }
 
@@ -61,7 +61,7 @@ for file in "$@"; do
         # Encrypt
         if [ ! -v TIME ]; then TIME="$DEFAULT_TIME"; fi
 
-        output="${file}.dee"
+        output="${file}.tlock"
 
         echo "Encrypting  → $file"
         echo "   Network  → $NETWORK"
@@ -74,11 +74,11 @@ for file in "$@"; do
 
     else
         # Decrypt
-        if [[ "$file" != *.dee ]]; then
-            echo "Warning: file does not end with .dee → $file"
+        if [[ "$file" != *.tlock ]]; then
+            echo "Warning: file does not end with .tlock → $file"
         fi
 
-        output="${file%.dee}.decrypted"
+        output="${file%.tlock}.decrypted"
 
         echo "Decrypting  → $file"
         echo "   Output   → $output"
