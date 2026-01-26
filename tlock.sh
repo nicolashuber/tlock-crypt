@@ -6,6 +6,35 @@
 
 set -euo pipefail
 
+# Color codes
+COLOR_RED='\033[0;31m'
+COLOR_GREEN='\033[0;32m'
+COLOR_YELLOW='\033[0;33m'
+COLOR_BLUE='\033[0;34m'
+COLOR_CYAN='\033[0;36m'
+COLOR_RESET='\033[0m'
+
+# Helper functions for colored output
+print_error() {
+    echo -e "${COLOR_RED}✗ $*${COLOR_RESET}"
+}
+
+print_success() {
+    echo -e "${COLOR_GREEN}✓ $*${COLOR_RESET}"
+}
+
+print_warning() {
+    echo -e "${COLOR_YELLOW}⚠ $*${COLOR_RESET}"
+}
+
+print_info() {
+    echo -e "${COLOR_BLUE}ℹ $*${COLOR_RESET}"
+}
+
+print_highlight() {
+    echo -e "${COLOR_CYAN}→ $*${COLOR_RESET}"
+}
+
 # Defaults
 NETWORK="quicknet"
 DEFAULT_TIME="3d"
@@ -49,27 +78,30 @@ if [ $# -eq 0 ]; then
     show_help
 fi
 
+# Function to run docker command
+run_docker() {
+    docker run --rm -i dee-timelock dee "$@"
+}
+
 # Function to encrypt a file
 encrypt_file() {
     local file="$1"
     local time="${2:-$DEFAULT_TIME}"
     local output="${file}.tlock"
 
-    echo "Encrypting  → $file"
-    echo "   Network  → $NETWORK"
-    echo "   Time     → $time"
-    echo "   Output   → $output"
+    print_highlight "Encrypting: $file"
+    print_info "   Network: $NETWORK"
+    print_info "   Time: $time"
+    print_info "   Output: $output"
 
-    cat "$file" | \
-        docker run --rm -i dee-timelock dee crypt -u "$NETWORK" -r "$time" \
-        > "$output"
+    cat "$file" | run_docker crypt -u "$NETWORK" -r "$time" > "$output"
 
     if [ $? -eq 0 ] && [ -s "$output" ]; then
-        echo "OK → $output created"
+        print_success "$output created"
         echo
         return 0
     else
-        echo "Error processing $file"
+        print_error "Error processing $file"
         rm -f "$output" 2>/dev/null
         return 1
     fi
@@ -81,21 +113,21 @@ decrypt_file() {
     local output="${file%.tlock}.decrypted"
 
     if [[ "$file" != *.tlock ]]; then
-        echo "Warning: file does not end with .tlock → $file"
+        print_error "File does not end with .tlock: $file"
+        return 1
     fi
 
-    echo "Decrypting  → $file"
-    echo "   Output   → $output"
+    print_highlight "Decrypting: $file"
+    print_info "   Output: $output"
 
-    docker run --rm -i dee-timelock dee crypt --decrypt < "$file" \
-        > "$output"
+    run_docker crypt --decrypt < "$file" > "$output"
 
     if [ $? -eq 0 ] && [ -s "$output" ]; then
-        echo "OK → $output created"
+        print_success "$output created"
         echo
         return 0
     else
-        echo "Error processing $file"
+        print_error "Error processing $file"
         rm -f "$output" 2>/dev/null
         return 1
     fi
@@ -105,7 +137,7 @@ decrypt_file() {
 for file in "$@"; do
 
     if [ ! -f "$file" ]; then
-        echo "File not found: $file"
+        print_error "File not found: $file"
         continue
     fi
 
@@ -118,4 +150,4 @@ for file in "$@"; do
 
 done
 
-echo "Done."
+# print_success "Done."
