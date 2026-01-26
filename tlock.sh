@@ -49,6 +49,58 @@ if [ $# -eq 0 ]; then
     show_help
 fi
 
+# Function to encrypt a file
+encrypt_file() {
+    local file="$1"
+    local time="${2:-$DEFAULT_TIME}"
+    local output="${file}.tlock"
+
+    echo "Encrypting  → $file"
+    echo "   Network  → $NETWORK"
+    echo "   Time     → $time"
+    echo "   Output   → $output"
+
+    cat "$file" | \
+        docker run --rm -i dee-timelock dee crypt -u "$NETWORK" -r "$time" \
+        > "$output"
+
+    if [ $? -eq 0 ] && [ -s "$output" ]; then
+        echo "OK → $output created"
+        echo
+        return 0
+    else
+        echo "Error processing $file"
+        rm -f "$output" 2>/dev/null
+        return 1
+    fi
+}
+
+# Function to decrypt a file
+decrypt_file() {
+    local file="$1"
+    local output="${file%.tlock}.decrypted"
+
+    if [[ "$file" != *.tlock ]]; then
+        echo "Warning: file does not end with .tlock → $file"
+    fi
+
+    echo "Decrypting  → $file"
+    echo "   Output   → $output"
+
+    docker run --rm -i dee-timelock dee crypt --decrypt < "$file" \
+        > "$output"
+
+    if [ $? -eq 0 ] && [ -s "$output" ]; then
+        echo "OK → $output created"
+        echo
+        return 0
+    else
+        echo "Error processing $file"
+        rm -f "$output" 2>/dev/null
+        return 1
+    fi
+}
+
 # Process each file
 for file in "$@"; do
 
@@ -58,41 +110,10 @@ for file in "$@"; do
     fi
 
     if [ "$MODE" = "encrypt" ]; then
-        # Encrypt
         if [ ! -v TIME ]; then TIME="$DEFAULT_TIME"; fi
-
-        output="${file}.tlock"
-
-        echo "Encrypting  → $file"
-        echo "   Network  → $NETWORK"
-        echo "   Time     → $TIME"
-        echo "   Output   → $output"
-
-        cat "$file" | \
-            docker run --rm -i dee-timelock dee crypt -u "$NETWORK" -r "$TIME" \
-            > "$output"
-
+        encrypt_file "$file" "$TIME"
     else
-        # Decrypt
-        if [[ "$file" != *.tlock ]]; then
-            echo "Warning: file does not end with .tlock → $file"
-        fi
-
-        output="${file%.tlock}.decrypted"
-
-        echo "Decrypting  → $file"
-        echo "   Output   → $output"
-
-        docker run --rm -i dee-timelock dee crypt --decrypt < "$file" \
-            > "$output"
-    fi
-
-    if [ $? -eq 0 ] && [ -s "$output" ]; then
-        echo "OK → $output created"
-        echo
-    else
-        echo "Error processing $file"
-        rm -f "$output" 2>/dev/null
+        decrypt_file "$file"
     fi
 
 done
