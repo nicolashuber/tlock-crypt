@@ -39,6 +39,7 @@ print_highlight() {
 NETWORK="quicknet"
 DEFAULT_TIME="3d"
 MODE="encrypt"  # encrypt or decrypt
+DELETE_ORIGINAL=false
 
 show_help() {
     echo "Usage: $(basename "$0") [options] file(s)"
@@ -47,6 +48,7 @@ show_help() {
     echo "  -t TIME     Lock time (encrypt only)   ex: 7d, 48h   [default: ${DEFAULT_TIME}]"
     echo "  -n NETWORK  Network name               [default: ${NETWORK}]"
     echo "  -d          Decrypt mode (instead of encrypt)"
+    echo "  -r          Remove original file after encryption"
     echo "  -h          Show this help"
     echo
     echo "Examples:"
@@ -54,6 +56,7 @@ show_help() {
     echo "  $(basename "$0") document.pdf"
     echo "  $(basename "$0") -t 7d contract.docx"
     echo "  $(basename "$0") -t 48h -n testnet report.txt"
+    echo "  $(basename "$0") -r secret.txt           # Remove original after encryption"
     echo
     echo "  # Decrypt"
     echo "  $(basename "$0") -d locked-file.tlock"
@@ -62,11 +65,12 @@ show_help() {
 }
 
 # Parse arguments
-while getopts "t:n:dh" opt; do
+while getopts "t:n:drh" opt; do
     case $opt in
         t) TIME="$OPTARG" ;;
         n) NETWORK="$OPTARG" ;;
         d) MODE="decrypt" ;;
+        r) DELETE_ORIGINAL=true ;;
         h) show_help ;;
         \?) show_help ;;
     esac
@@ -98,6 +102,12 @@ encrypt_file() {
 
     if [ $? -eq 0 ] && [ -s "$output" ]; then
         print_success "$output created"
+        
+        if [ "$DELETE_ORIGINAL" = true ]; then
+            rm -f "$file"
+            print_info "   Original file deleted: $file"
+        fi
+        
         echo
         return 0
     else
@@ -110,25 +120,32 @@ encrypt_file() {
 # Function to decrypt a file
 decrypt_file() {
     local file="$1"
-    local output="${file%.tlock}.decrypted"
+    local temp_output="${file%.tlock}.decrypted"
+    local final_output="${file%.tlock}"
 
     if [[ "$file" != *.tlock ]]; then
-        print_error "File does not end with .tlock: $file"
-        return 1
+        print_warning "File does not end with .tlock: $file"
     fi
 
     print_highlight "Decrypting: $file"
-    print_info "   Output: $output"
+    print_info "   Output: $final_output"
 
-    run_docker crypt --decrypt < "$file" > "$output"
+    run_docker crypt --decrypt < "$file" > "$temp_output"
 
-    if [ $? -eq 0 ] && [ -s "$output" ]; then
-        print_success "$output created"
+    if [ $? -eq 0 ] && [ -s "$temp_output" ]; then
+        # Rename removing .tlock extension
+        mv "$temp_output" "$final_output"
+        
+        # Delete the .tlock file after successful decryption
+        rm -f "$file"
+        
+        print_success "$final_output created"
+        print_info "   Encrypted file deleted: $file"
         echo
         return 0
     else
         print_error "Error processing $file"
-        rm -f "$output" 2>/dev/null
+        rm -f "$temp_output" 2>/dev/null
         return 1
     fi
 }
@@ -150,4 +167,4 @@ for file in "$@"; do
 
 done
 
-# print_success "Done."
+print_success "Done."
