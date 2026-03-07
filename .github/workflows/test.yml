@@ -1,0 +1,23 @@
+name: Test Script
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install bats
+        run: sudo apt-get install -y bats
+
+      - name: Run tests
+        run: bats tests/tlock-test.bats
