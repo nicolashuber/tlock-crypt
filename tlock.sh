@@ -39,7 +39,6 @@ print_highlight() {
 NETWORK="quicknet"
 DEFAULT_TIME="3d"
 MODE="encrypt"  # encrypt or decrypt
-DELETE_ORIGINAL=false
 
 show_help() {
     echo "Usage: $(basename "$0") [options] file(s)"
@@ -48,7 +47,6 @@ show_help() {
     echo "  -t TIME     Lock time (encrypt only)   ex: 7d, 48h   [default: ${DEFAULT_TIME}]"
     echo "  -n NETWORK  Network name               [default: ${NETWORK}]"
     echo "  -d          Decrypt mode (instead of encrypt)"
-    echo "  -r          Remove original file after encryption"
     echo "  -h          Show this help"
     echo
     echo "Examples:"
@@ -56,7 +54,6 @@ show_help() {
     echo "  $(basename "$0") document.pdf"
     echo "  $(basename "$0") -t 7d contract.docx"
     echo "  $(basename "$0") -t 48h -n testnet report.txt"
-    echo "  $(basename "$0") -r secret.txt           # Remove original after encryption"
     echo
     echo "  # Decrypt"
     echo "  $(basename "$0") -d locked-file.tlock"
@@ -65,12 +62,11 @@ show_help() {
 }
 
 # Parse arguments
-while getopts "t:n:drh" opt; do
+while getopts "t:n:dh" opt; do
     case $opt in
         t) TIME="$OPTARG" ;;
         n) NETWORK="$OPTARG" ;;
         d) MODE="decrypt" ;;
-        r) DELETE_ORIGINAL=true ;;
         h) show_help ;;
         \?) show_help ;;
     esac
@@ -102,12 +98,6 @@ encrypt_file() {
 
     if [ $? -eq 0 ] && [ -s "$output" ]; then
         print_success "$output created"
-        
-        if [ "$DELETE_ORIGINAL" = true ]; then
-            rm -f "$file"
-            print_info "   Original file deleted: $file"
-        fi
-        
         echo
         return 0
     else

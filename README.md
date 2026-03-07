@@ -48,9 +48,6 @@ sudo mv tlock.sh /usr/local/bin/tlock
 ./tlock.sh -t 7d contract.docx
 ./tlock.sh -t 48h report.txt
 ./tlock.sh -t 2h presentation.pptx
-
-# Delete original file after encryption
-./tlock.sh -r secret.txt
 ```
 
 **Time formats:**
@@ -73,6 +70,5 @@ sudo mv tlock.sh /usr/local/bin/tlock
 |------|-------------|---------|
 | `-t TIME` | Lock duration | `-t 7d` (7 days) |
 | `-n NETWORK` | Drand network | `-n quicknet` (default) |
-| `-r` | Remove original file after encryption | `-r` |
 | `-d` | Decrypt mode | `-d` |
 | `-h` | Show help | `-h` |
