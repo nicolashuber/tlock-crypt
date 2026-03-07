@@ -49,3 +49,26 @@ teardown() {
   run bash "$SCRIPT_DIR/tlock.sh"
   [ "$status" -ne 0 ]
 }
+
+@test "Tlock deve cancelar criptografia se arquivo .tlock já existe e usuário responde 'n'" {
+  # Pre-create the .tlock file
+  echo "conteudo antigo" > "${TEST_FILE}.tlock"
+  old_content=$(cat "${TEST_FILE}.tlock")
+
+  run bash -c "echo 'n' | bash '$SCRIPT_DIR/tlock.sh' '$TEST_FILE'"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"A criptografia foi cancelada pelo usuário."* ]]
+  # File must remain unchanged
+  [ "$(cat "${TEST_FILE}.tlock")" = "$old_content" ]
+}
+
+@test "Tlock deve sobrescrever arquivo .tlock se já existe e usuário responde 'y'" {
+  # Pre-create the .tlock file with different content
+  echo "conteudo antigo" > "${TEST_FILE}.tlock"
+
+  run bash -c "echo 'y' | bash '$SCRIPT_DIR/tlock.sh' '$TEST_FILE'"
+  [ "$status" -eq 0 ]
+  [ -f "${TEST_FILE}.tlock" ]
+  # Content must have been replaced (mock docker echoes original file content)
+  [ "$(cat "${TEST_FILE}.tlock")" != "conteudo antigo" ]
+}
