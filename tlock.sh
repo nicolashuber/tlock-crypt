@@ -89,6 +89,14 @@ encrypt_file() {
     local time="${2:-$DEFAULT_TIME}"
     local output="${file}.tlock"
 
+    if [ -f "$output" ]; then
+        read -r -p "O arquivo \"$(basename "$output")\" já existe. Deseja sobrescrever? [y/n]: " response
+        if [ "$response" != "y" ] && [ "$response" != "Y" ]; then
+            echo "A criptografia foi cancelada pelo usuário."
+            return 0
+        fi
+    fi
+
     print_highlight "Encrypting: $file"
     print_info "   Network: $NETWORK"
     print_info "   Time: $time"
