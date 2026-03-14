@@ -8,16 +8,16 @@ setup() {
   TEST_FILE="$TEST_DIR/testfile.txt"
   echo "isto é um texto de teste" > "$TEST_FILE"
 
-  # Create a mock docker command to avoid requiring real Docker + dee-timelock
+  # Create a mock dee command to avoid requiring real dee binary
   mkdir -p "$TEST_DIR/bin"
-  cat > "$TEST_DIR/bin/docker" << 'DOCKER_EOF'
+  cat > "$TEST_DIR/bin/dee" << 'DEE_EOF'
 #!/usr/bin/env bash
-# Mock docker: pass stdin to stdout for testing purposes
+# Mock dee: pass stdin to stdout for testing purposes
 cat
-DOCKER_EOF
-  chmod +x "$TEST_DIR/bin/docker"
+DEE_EOF
+  chmod +x "$TEST_DIR/bin/dee"
 
-  # Prepend the mock bin directory to PATH so tlock.sh uses the mock docker
+  # Prepend the mock bin directory to PATH so tlock.sh uses the mock dee
   export PATH="$TEST_DIR/bin:$PATH"
 }
 

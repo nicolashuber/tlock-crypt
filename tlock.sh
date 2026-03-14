@@ -78,9 +78,9 @@ if [ $# -eq 0 ]; then
     show_help
 fi
 
-# Function to run docker command
-run_docker() {
-    docker run --rm -i dee-timelock dee "$@"
+# Function to run dee command
+run_dee() {
+    dee "$@"
 }
 
 # Function to encrypt a file
@@ -102,7 +102,7 @@ encrypt_file() {
     print_info "   Time: $time"
     print_info "   Output: $output"
 
-    cat "$file" | run_docker crypt -u "$NETWORK" -r "$time" > "$output"
+    cat "$file" | run_dee crypt -u "$NETWORK" -r "$time" > "$output"
 
     if [ $? -eq 0 ] && [ -s "$output" ]; then
         print_success "$output created"
@@ -128,7 +128,7 @@ decrypt_file() {
     print_highlight "Decrypting: $file"
     print_info "   Output: $final_output"
 
-    run_docker crypt --decrypt < "$file" > "$temp_output"
+    run_dee crypt --decrypt < "$file" > "$temp_output"
 
     if [ $? -eq 0 ] && [ -s "$temp_output" ]; then
         # Rename removing .tlock extension

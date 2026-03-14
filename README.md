@@ -1,6 +1,6 @@
 ## tlock - Timelock File Encryption Tool
 
-A bash script wrapper for encrypting and decrypting files using drand timelock encryption via the dee-timelock Docker container.
+A bash script wrapper for encrypting and decrypting files using drand timelock encryption. Available as a single Docker image on Docker Hub.
 
 ### What it does?
 tlock.sh allows you to:
@@ -11,22 +11,25 @@ tlock.sh allows you to:
 
 ## Setup
 
-### Prerequisites
+### Option 1: Docker Hub (recommended)
 
-- Docker installed and running
-- `dee-timelock` Docker image
-
-### Install dee-timelock
+Pull the image and use it directly — no local installation required:
 
 ```bash
-# Pull the dee-timelock Docker image
-docker pull dee-timelock
-
-# Or build it from source if you have the repository
-# docker build -t dee-timelock .
+docker pull nicolashuber/tlock-crypt:latest
 ```
 
-### Install tlock.sh
+### Option 2: Build from source
+
+```bash
+git clone https://github.com/nicolashuber/tlock-crypt.git
+cd tlock-crypt
+docker build -t nicolashuber/tlock-crypt .
+```
+
+### Option 3: Install tlock.sh locally
+
+Requires `dee` to be installed and available in your PATH.
 
 ```bash
 # Make the script executable
@@ -38,7 +41,25 @@ sudo mv tlock.sh /usr/local/bin/tlock
 
 ## Usage
 
-### Encrypt Files
+### Using Docker (recommended)
+
+```bash
+# Encrypt (default: 3 days)
+docker run --rm -v $(pwd):/data nicolashuber/tlock-crypt:latest document.pdf
+
+# Encrypt with custom lock time
+docker run --rm -v $(pwd):/data nicolashuber/tlock-crypt:latest -t 7d contract.docx
+
+# Decrypt
+docker run --rm -v $(pwd):/data nicolashuber/tlock-crypt:latest -d document.pdf.tlock
+
+# Show help
+docker run --rm nicolashuber/tlock-crypt:latest -h
+```
+
+> **Note:** Mount your working directory to `/data` inside the container so tlock can access your files.
+
+### Using tlock.sh directly
 
 ```bash
 # Basic encryption (default: 3 days)
